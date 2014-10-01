@@ -194,7 +194,8 @@ filter_unit fil_uni (
 					.data_in(data_in),
 					.image_width(image_width),
 					.clk(clock),
-					.rst(reflesh),
+					.rst(rst),
+					.reflesh(reflesh),
 					.data_out(data_out)
 					);
 
