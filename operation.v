@@ -22,22 +22,24 @@ wire	 [8:0]		d[Ope_Size-1:0][Ope_Size-1:0];
 wire	 valid_in;
 wire [7:0]	p[Ope_Size-1:0][Ope_Size-1:0];
 
-reg queue[DELAY-1:0];
+
 reg [7:0] pixel_out;
 reg	valid_out;
 
-
+/*
 reg [9:0] gx_0;
 reg [9:0] gx_1;
 
 reg [10:0] deff;
 reg [9:0] abs;
-					 
+
+reg queue[DELAY-1:0];
+*/				 
 
 genvar x,y;
 generate	
-	for(y = 0; y < Ope_Size; y = y + 1) begin: loop_y
-		for(x = 0; x < Ope_Size; x = x + 1) begin: loop_x
+	for(y = 0; y < Ope_Size; y = y + 1) begin: ope_loop_y
+		for(x = 0; x < Ope_Size; x = x + 1) begin: ope_loop_x
 			assign d[y][x]	= data_bus[(((y*Ope_Size)+x)*9)+:9];
 			assign p[y][x]	= d[y][x][0+:8];
 		end
@@ -79,10 +81,11 @@ always @(posedge clk) begin
 	if(rst|reflesh) begin
 		pixel_out <= 0;
 		valid_out	<=0;
-
+		/*
 		for(i = 0; i < DELAY; i = i + 1) begin // i++, ++iとは記述できない
 			queue[i] <= 0;
 		end
+		*/
 	end
 	else begin
 
@@ -115,13 +118,15 @@ always @(posedge clk) begin
 		valid_out<=queue[2];
 		*/
 		/*
-		if(d_21[8])	begin
-			pixel_out<=d_21[7:0];
+		if(d[0][0][8])	begin
+			pixel_out<=d[0][0][0+:8];
 		end
 		else begin
 			pixel_out <= 8'hff;
 		end
+		valid_out	<=		valid_in;
 		*/
+		
 		pixel_out	<=	p[Ope_Size/2][Ope_Size/2];
 		valid_out	<=		valid_in;
 		

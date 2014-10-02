@@ -189,9 +189,9 @@ always @(posedge clock) begin
 
 end
 
-//Ope_Size
+//Ope_Size must be odd
 filter_unit #(
-		.Ope_Size(5)
+		.Ope_Size(3)
 	)fil_uni (
 		.data_in(data_in),
 		.image_width(image_width),
