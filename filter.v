@@ -189,15 +189,17 @@ always @(posedge clock) begin
 
 end
 
-
-filter_unit fil_uni (
-					.data_in(data_in),
-					.image_width(image_width),
-					.clk(clock),
-					.rst(rst),
-					.reflesh(reflesh),
-					.data_out(data_out)
-					);
+//Ope_Size
+filter_unit #(
+		.Ope_Size(5)
+	)fil_uni (
+		.data_in(data_in),
+		.image_width(image_width),
+		.clk(clock),
+		.rst(reset),
+		.reflesh(reflesh),
+		.data_out(data_out)
+		);
 
 endmodule
 
