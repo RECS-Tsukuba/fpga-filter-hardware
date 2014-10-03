@@ -51,7 +51,12 @@ architecture mixed of user_app is
     signal user_enable : std_logic;
     signal reflesh : std_logic;
     signal image_size : std_logic_vector(rd_width(0)- 1 downto 0);
-    signal image_width : std_logic_vector(rd_width(0)- 1 downto 0);
+    signal image_width : std_logic_vector(9  downto 0);
+
+    signal user_flag : in std_logic;
+    signal pos_x : in std_logic_vector(9 downto 0);
+    signal pos_y : in std_logic_vector(9 downto 0);				        
+
 
     signal is_end : std_logic;
 
@@ -83,7 +88,7 @@ architecture mixed of user_app is
             ready1 : in std_logic;
 
             image_size : in std_logic_vector(32 - 1 downto 0);
-            image_width : in std_logic_vector(32 - 1 downto 0);				
+            image_width : in std_logic_vector(9 downto 0);
 
             reflesh : in std_logic;
             reset : in std_logic;
@@ -132,33 +137,76 @@ begin
         end if;
     end process;
 	 
-	  set_image_width : process(rst, clk) begin
+    set_image_width : process(rst, clk) begin
         if rst = '1' then
             image_width <= (others => '0');
         elsif clk'event and clk = '1' then
-            for j in 0 to 3 loop
-              if user_wr(3)(j) = '1' then
-                image_width(8 * j + 7 downto 8 * j) <= reg_in(8 * j + 7 downto 8 * j);
-              end if;
-            end loop;
+          if user_wr(3)(0) = '1' then
+            image_width(7 downto 0) <= reg_in(7 downto 0);
+          end if;
+          if user_wr(3)(1) = '1' then
+            image_width(9 downto 8) <= reg_in(9 downto 8);
+          end if;
         end if;
     end process;
+
+    set_user_flag : process(rst, clk) begin
+        if rst = '1' then
+            user_flag <= 0;
+        elsif clk'event and clk = '1' then
+          if user_wr(4)(0) = '1' then
+            user_flag <= reg_in(0);
+          end if;
+        end if;
+    end process;
+
+    set_pos_x : process(rst, clk) begin
+        if rst = '1' then
+            pos_x <= (others => '0');
+        elsif clk'event and clk = '1' then
+          if user_wr(5)(0) = '1' then
+            pos_x(7 downto 0) <= reg_in(7 downto 0);
+          end if;
+          if user_wr(5)(1) = '1' then
+            pos_x(9 downto 8) <= reg_in(9 downto 8);
+          end if;
+        end if;
+    end process;
+
+    set_pos_y : process(rst, clk) begin
+        if rst = '1' then
+            pos_y <= (others => '0');
+        elsif clk'event and clk = '1' then
+          if user_wr(6)(0) = '1' then
+            pos_y(7 downto 0) <= reg_in(7 downto 0);
+          end if;
+          if user_wr(6)(1) = '1' then
+            pos_y(9 downto 8) <= reg_in(9 downto 8);
+          end if;
+        end if;
+    end process;
+
+
+
 
     user_out(0)(0) <= reflesh;
     user_out(0)(31 downto 1) <= (others => '0');
     user_out(1)(0) <= user_enable;
     user_out(1)(31 downto 1) <= (others => '0');
     user_out(2) <= image_size;
-    user_out(3) <= image_width;
+    user_out(3)(9 downto 0) <= image_width;
+    user_out(3)(31 downto 10) <= (others => '0');
+    user_out(4)(0) <= usr_flag;
+    user_out(4)(31 downto 1) <= (others => '0');
+
+    user_out(5)(9 downto 0) <= pos_x;
+    user_out(5)(31 downto 10) <= (others => '0');
+
+    user_out(6)(9 downto 0) <= pos_y;
+    user_out(6)(31 downto 10) <= (others => '0');
+  
     user_out(32)(0) <= is_end;
     user_out(32)(31 downto 1) <= (others => '0');
-
-    user_out(33)(0) <= reflesh;
-    user_out(33)(31 downto 1) <= (others => '0');
-    user_out(34)(0) <= user_enable;
-    user_out(34)(31 downto 1) <= (others => '0');
-
-    user_out(35) <= image_size;
 
 
     -- Unused regisers return undefined
