@@ -117,7 +117,7 @@ module filter #(
 	       (reset|reflesh)? INVALID_TAG:is_tag_in;
 
       tag_out <=
-		(reset|refleshh)? INVALID_TAG:is_tag_out;
+		(reset|reflesh)? INVALID_TAG:is_tag_out;
 
       
       request0 <=
