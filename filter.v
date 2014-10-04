@@ -30,6 +30,13 @@ module filter #(
 		   output reg [TAG_WIDTH - 1: 0] tag0,
 		   output reg [SRAMDATA_WIDTH - 1: 0] data_out1,
 		   output reg is_end,
+
+		   output reg [31:0]debug_signal0,
+		   output reg [31:0]debug_signal1,
+		   output reg [31:0]debug_signal2,
+		   output reg [31:0]debug_signal3,
+
+
 		   input valid0, valid1,
 		   input [SRAMDATA_WIDTH - 1: 0] query0,
 		   input [TAG_WIDTH - 1: 0] qtag0,
@@ -104,6 +111,17 @@ module filter #(
 
 
    always @(posedge clock) begin
+
+      debug_signal0 <= (reset) ? 32'h0: pos_x;
+
+      debug_signal1 <= (reset) ? 32'h0: pos_y;
+
+
+      debug_signal2 <= (reset) ? 32'h0: 32'h0;
+
+      debug_signal3 <= (reset) ? 32'h0: 32'h0;
+
+
       start <=
 	      (reset|reflesh)? 1'b1: (
 				      (is_tag_in==DATA_TAG0||is_tag_in==DATA_TAG1)? 1'b0 : (

@@ -55,7 +55,12 @@ architecture mixed of user_app is
 
     signal user_flag : std_logic;
     signal pos_x : std_logic_vector(9 downto 0);
-    signal pos_y : std_logic_vector(9 downto 0);				        
+    signal pos_y : std_logic_vector(9 downto 0);
+
+    signal debug_signal0 : std_logic_vector(rd_width(0)- 1 downto 0);
+    signal debug_signal1 : std_logic_vector(rd_width(0)- 1 downto 0);
+    signal debug_signal2 : std_logic_vector(rd_width(0)- 1 downto 0);
+    signal debug_signal3 : std_logic_vector(rd_width(0)- 1 downto 0);
 
 
     signal is_end : std_logic;
@@ -80,6 +85,11 @@ architecture mixed of user_app is
             data_out1 : out std_logic_vector(bank_width(1) - 1 downto 0);
             is_end : out std_logic;
 
+            debug_signal0 : out std_logic_vector(31 downto 0);
+            debug_signal1 : out std_logic_vector(31 downto 0);
+            debug_signal2 : out std_logic_vector(31 downto 0);
+            debug_signal3 : out std_logic_vector(31 downto 0);
+                        
             valid0 : in std_logic;
             valid1 : in std_logic;
             query0 : in std_logic_vector(bank_width(0) - 1 downto 0);
@@ -215,10 +225,18 @@ begin
     user_out(32)(31 downto 1) <= (others => '0');
 
 
+    
+    user_out(60) <= debug_signal0;
+    user_out(61) <= debug_signal1;
+    user_out(62) <= debug_signal2;
+    user_out(63) <= debug_signal3;
+    
+
+
     -- Unused regisers return undefined
     user_out(7 to 31) <= (others => (others => '-'));
 --    user_out(33 to 61) <= (others => (others => '-'));
-    user_out(33 to 61) <= (others => (others => '-'));
+    user_out(33 to 59) <= (others => (others => '-'));
 
     w(0) <= '0';
     tag(1) <= (others => '0');
@@ -243,6 +261,12 @@ begin
             tag0 => tag(0),
             data_out1 => d(1)(bank_width(0) - 1 downto 0),
             is_end => is_end,
+
+            debug_signal0 => debug_signal0,
+            debug_signal1 => debug_signal1,
+            debug_signal2 => debug_signal2,
+            debug_signal3 => debug_signal3,
+            
 
             valid0 => valid(0),
             valid1 => valid(1),
