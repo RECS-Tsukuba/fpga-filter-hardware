@@ -1,3 +1,4 @@
+`timescale 1ns / 1ps
 module operation	#(
 			  parameter TAG_WIDTH = 2,
 			  parameter INVALID_TAG = 2'd0,

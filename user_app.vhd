@@ -53,9 +53,9 @@ architecture mixed of user_app is
     signal image_size : std_logic_vector(rd_width(0)- 1 downto 0);
     signal image_width : std_logic_vector(9  downto 0);
 
-    signal user_flag : in std_logic;
-    signal pos_x : in std_logic_vector(9 downto 0);
-    signal pos_y : in std_logic_vector(9 downto 0);				        
+    signal user_flag : std_logic;
+    signal pos_x : std_logic_vector(9 downto 0);
+    signal pos_y : std_logic_vector(9 downto 0);				        
 
 
     signal is_end : std_logic;
@@ -89,6 +89,11 @@ architecture mixed of user_app is
 
             image_size : in std_logic_vector(32 - 1 downto 0);
             image_width : in std_logic_vector(9 downto 0);
+            user_flag : in std_logic;
+            pos_x : in std_logic_vector(9 downto 0);
+            pos_y : in std_logic_vector(9 downto 0);
+				
+				
 
             reflesh : in std_logic;
             reset : in std_logic;
@@ -152,7 +157,7 @@ begin
 
     set_user_flag : process(rst, clk) begin
         if rst = '1' then
-            user_flag <= 0;
+            user_flag <= '0';
         elsif clk'event and clk = '1' then
           if user_wr(4)(0) = '1' then
             user_flag <= reg_in(0);
@@ -196,7 +201,8 @@ begin
     user_out(2) <= image_size;
     user_out(3)(9 downto 0) <= image_width;
     user_out(3)(31 downto 10) <= (others => '0');
-    user_out(4)(0) <= usr_flag;
+	 
+    user_out(4)(0) <= user_flag;
     user_out(4)(31 downto 1) <= (others => '0');
 
     user_out(5)(9 downto 0) <= pos_x;
@@ -210,9 +216,9 @@ begin
 
 
     -- Unused regisers return undefined
-    user_out(4 to 31) <= (others => (others => '-'));
+    user_out(7 to 31) <= (others => (others => '-'));
 --    user_out(33 to 61) <= (others => (others => '-'));
-    user_out(36 to 61) <= (others => (others => '-'));
+    user_out(33 to 61) <= (others => (others => '-'));
 
     w(0) <= '0';
     tag(1) <= (others => '0');
@@ -247,6 +253,9 @@ begin
 
             image_size => image_size,
             image_width => image_width,
+            user_flag => user_flag,
+            pos_x => pos_x,
+            pos_y => pos_y,
             reflesh => reflesh,
 
             reset => rst,

@@ -35,8 +35,11 @@ module filter #(
 		   input [TAG_WIDTH - 1: 0] qtag0,
 		   input ready0, ready1,
 
-		   input [SRAMDATA_WIDTH - 1: 0] image_size,
-		   input [SRAMDATA_WIDTH - 1: 0] image_width,
+		   input [31: 0] image_size,
+		   input [9: 0] image_width,
+		   input user_flag,
+		   input [9: 0] pos_x,
+		   input [9: 0] pos_y,
 		   input reflesh,
 		   input reset,
 		   input clock
@@ -63,21 +66,21 @@ module filter #(
    wire [8+TAG_WIDTH-1:0]	data_in;
    wire [8+TAG_WIDTH-1:0]	data_out;
 
-   wire [31:0] hoge = image_width - 32'h1;
+
 
    reg	[1:0]	count0;
    reg	[1:0]	count1;
    reg [9:0] width_count;
 
-   reg	[31:0]	ptr0;
-   reg	[31:0]	ptr1;
+   reg [31:0] system_count;
+
+   reg	[ADDRESS_WIDTH:0]	ptr0;
+   reg	[ADDRESS_WIDTH:0]	ptr1;
 
 
    reg [TAG_WIDTH-1:0]tag_in;
    reg [TAG_WIDTH-1:0]tag_out;
 
-
-   //reg	[TAG_WIDTH-1:0]	tag_queue[SRAM_DELAY-1:0];
 
    reg start;
 
@@ -87,7 +90,7 @@ module filter #(
 
    assign is_tag_in = (valid0 && is_end==1'b0)?  qtag0 : INVALID_TAG;
 
-   assign pixel_in= word_in[7:0];
+   assign pixel_in= word_in[0+:8];
 
    assign data_in[8+:TAG_WIDTH] = tag_in;
    assign data_in[0+:8] = pixel_in;
@@ -101,32 +104,20 @@ module filter #(
 
 
    always @(posedge clock) begin
-      //word_in<=query0;
-      /*
-       if(reset|reflesh)begin
-       for(i = 0; i < SRAM_DELAY; i = i + 1) begin // i++, ++iとは記述できない
-       tag_queue[i] <= 0;
-		end
-	end
-       else begin
-       tag_queue[0]	<=	qtag0;
-       for(i = 0; i < SRAM_DELAY-1; i = i + 1) begin // i++, ++iとは記述できない
-       tag_queue[i+1] <= tag_queue[i];
-		end
-	end
-       */
-      start		<=
-			  (reset|reflesh)?	1'b1:	(
-							 (is_tag_in==DATA_TAG0||is_tag_in==DATA_TAG1)?	1'b0	:	(
-											 start));
+      start <=
+	      (reset|reflesh)? 1'b1: (
+				      (is_tag_in==DATA_TAG0||is_tag_in==DATA_TAG1)? 1'b0 : (
+											    start));
+      system_count <=
+	     (reset|reflesh)? 32'h0: (
+				      (system_count == (image_size<<2))? (image_size<<2): system_count + 32'h1);
+
 
       tag_in <=
-		 (reset|reflesh)? INVALID_TAG:
-		 (is_tag_in);
+	       (reset|reflesh)? INVALID_TAG:is_tag_in;
 
       tag_out <=
-		  (reset|reflesh)? INVALID_TAG:
-		  (is_tag_out);
+		(reset|refleshh)? INVALID_TAG:is_tag_out;
 
       
       request0 <=
@@ -145,44 +136,45 @@ module filter #(
       
       command_entry1 <=  
 			 (reset | reflesh| is_end)? 0: (
-						(ready1&(count1==2'b10)&(start==1'b0))? 1 : (
-											     0));
+							(ready1&(count1==2'b10)&(start==1'b0))? 1 : (
+												     0));
       
       write_enable1 <=
 		      (reset | reflesh | is_end)? 0: (
-					     ready1);
+						      ready1);
+
 
       ptr0 <=
-	     (reset)? 32'h0: (
-				     (reflesh)? 32'h0: (
-							(ptr0 == image_size)? image_size: (
-											   (ready0)? ptr0 + 1: (
-														ptr0))));
-
+	     (reset|reflesh)? 32'h0: (
+				      (ptr0 == image_size)? image_size: (
+									 (ready0)? ptr0 + 1: (
+											      ptr0)));
       width_count <=
 		    (reset|reflesh)? 10'b0 : (
-					      (width_count==hoge[9:0])? 10'b0 :(
-										(ready0)? width_count+10'b01:width_count));
+					      (width_count==(image_width-10'h1))? 10'b0 :(
+											  (ready0)? width_count+10'b01:width_count));
 
       ptr1 <=
-	     (reset)? 32'h0: (
-				     (reflesh|start)? 32'h0: (
-							      ((ptr1 == image_size))? image_size: (
-												   (ready1 && (tag_out==DATA_TAG0||tag_out==DATA_TAG1))? ptr1 + 1: (
-																    ptr1))));
+	     (reset|reflesh|start)? 32'h0: (
+					    ((ptr1 == image_size))? image_size: (
+										 (ready1 && (tag_out==DATA_TAG0||tag_out==DATA_TAG1))? ptr1 + 1: (
+																		  ptr1)));
+
+
       tag0 <=
 	     (reset | reflesh| is_end | (!ready0) )? INVALID_TAG: (
 								   (ptr0 == image_size)? DATA_END_TAG:(
-												       (width_count==hoge[9:0])? DATA_TAG1: DATA_TAG0));
+												       (width_count==(image_width-10'h1))? DATA_TAG1: DATA_TAG0));
 
       count0 <=
 	       (reset|reflesh)? 2'b00 : (
 					 (ready0 &(tag_in==DATA_TAG0||tag_in==DATA_TAG1)&(start==1'b0))? count0+2'b01: (
-											    count0));
+															count0));
+
       count1 <=
 	       (reset|reflesh)? 2'b00 : (
 					 (ready1 & (tag_out==DATA_TAG0||tag_out==DATA_TAG1))? count1+2'b01: (
-									      count1));
+													     count1));
       
       word_in <= 
 		 (is_end)? 32'h0:(
@@ -197,15 +189,14 @@ module filter #(
       data_out1[31:24]<=pixel_out;
 
       is_end <=
-	       (reset)? 0: (
-			    (reflesh)? 0: (
-					   (ptr1 >= (image_size) )? 1: (
-									is_end)));
+	       (reset|reflesh)? 0: (
+				    (ptr1 == (image_size) || system_count == (image_size<<2) )? 1: (
+													   is_end));
 
    end
 
    //Ope_Width must be odd
-    filter_unit #(
+   filter_unit #(
     		 .TAG_WIDTH(TAG_WIDTH),
     		 .INVALID_TAG(INVALID_TAG),
     		 .DATA_TAG0(DATA_TAG0),
