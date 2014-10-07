@@ -12,14 +12,14 @@ module filter_unit	#(
 			    input	[9:0]	image_width,
 			    input	clk,
 			    input rst,
-			    input reflesh,
+			    input refresh,
 			    output [DATA_WIDTH-1:0]	data_out
 			    );
    //for文用の変数宣言
    integer i,j;
 
 
-
+   //画素データ用レジスタ(pixel(8b)+tag(2b))
    reg	 [DATA_WIDTH-1:0]		d[OPE_WIDTH-1:0][OPE_WIDTH-1:0];
 
    // アドレス生成用レジスタ
@@ -27,13 +27,16 @@ module filter_unit	#(
 
 
 
-
+   //line_buffer用wire
    wire	 [DATA_WIDTH-1:0] buf_out[OPE_WIDTH-1:0];
+   //下位モジュール接続用bus
+   //OPE_SIZE^2のdata(10b)
    wire [DATA_WIDTH*OPE_WIDTH*OPE_WIDTH-1:0]data_bus;
 
    
    //generate文用変数の宣言
    genvar x,y;
+   //databusとdataの対応付け
    generate
       for(y = 0; y < OPE_WIDTH; y = y + 1) begin: loop_y
 	 for(x = 0; x < OPE_WIDTH; x = x + 1) begin: loop_x
@@ -44,14 +47,12 @@ module filter_unit	#(
 
    assign buf_out[OPE_WIDTH-1] = data_in;
 
-   ///////////////////////////////////////////////////////////////////////////////////////
-   // ここから下のソースを必要に応じて追記、変更してください 
-
 
    always @(posedge clk) begin
-      if(rst|reflesh) begin
+      if(rst|refresh) begin
 	 raddr <= 0;
 	 waddr <= 0;
+	 //dataレジスタの初期化
 	 for(i = 0; i < OPE_WIDTH; i = i + 1) begin // i++, ++iとは記述できない
 	    for(j = 0; j < OPE_WIDTH; j = j + 1) begin
 	       d[i][j]	<= 0;
@@ -61,8 +62,9 @@ module filter_unit	#(
       else begin
 
 	 /////////////////////////////////////////////////////////
-	 // Unit_2 : OPE_WIDTH×OPE_WIDTHシフトレジスタ								 //
-	 /////////////////////////////////////////////////////////
+	 //OPE_WIDTH×OPE_WIDTHシフトレジスタ
+	 //特に用がなければ触らない
+	 ///////////////////////////////////////////////////////////
 
 	 for(i = 0; i < OPE_WIDTH; i = i + 1) begin // i++, ++iとは記述できない
 	    for(j = 0; j < OPE_WIDTH; j = j + 1) begin
@@ -75,9 +77,14 @@ module filter_unit	#(
 	    end
 	 end
 
+	 /////////////////////////////////////////////////////////
+	 //OPE_WIDTH×OPE_WIDTHシフトレジスタ　終わり
+	 ///////////////////////////////////////////////////////////
+
+
 	 
 	 /********************************************************
-	  ** Control_2 : BlockRAMのアドレス生成回路		**
+	  ** Control_2 : BlockRAMのアドレス生成回路（触らない）		**
 	  ********************************************************/
 
 	 waddr <= raddr;
@@ -89,8 +96,8 @@ module filter_unit	#(
    end
 
    ///////////////////////////////////////////////////////////
-	   // Unit_3 : 演算回路(モジュール呼び出し)				　　//
-	   /////////////////////////////////////////////////////////
+   // Unit_3 : 演算回路(モジュール呼び出し)
+   /////////////////////////////////////////////////////////
 
    // 演算回路の呼び出し
    operation #(
@@ -104,13 +111,13 @@ module filter_unit	#(
 		    .data_bus(data_bus),
 		    .clk (clk),
 		    .rst (rst),
-		    .reflesh(reflesh),
+		    .refresh(refresh),
 		    .out (data_out)
 		    );
 
 
    /////////////////////////////////////////////////////////
-   // BlockRAMs (depth=ImageWidth width=8bit)			 			    //
+   // BlockRAMs (depth=ImageWidth width=8bit)	の呼び出し
    /////////////////////////////////////////////////////////
 
 

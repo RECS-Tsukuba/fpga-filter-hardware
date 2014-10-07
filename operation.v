@@ -1,17 +1,24 @@
 `timescale 1ns / 1ps
 module operation	#(
+			  //各画素に付加されるtagのビット幅
 			  parameter TAG_WIDTH = 2,
+			  //tag値：無効値
 			  parameter INVALID_TAG = 2'd0,
+			  //tag値：有効値
 			  parameter DATA_TAG0 = 2'd1,
+			  //tag値：有効値（行末）
 			  parameter DATA_TAG1 = 2'd2,
+			  //tag値：無効値（終了）
 			  parameter DATA_END_TAG = 2'd3,
+			  //Operation Window幅（正方形）
 			  parameter OPE_WIDTH = 3,
+			  //各画素値のbit幅（画素値（8b）＋tag（2b））
 			  parameter DATA_WIDTH = 8 + TAG_WIDTH
 			  )(
 			    input [DATA_WIDTH*OPE_WIDTH*OPE_WIDTH-1:0]data_bus,
 			    input	clk,
 			    input	rst,
-			    input	reflesh,
+			    input	refresh,
 			    output	[DATA_WIDTH-1:0]out
 			    );
 
@@ -20,11 +27,15 @@ module operation	#(
    wire	 [DATA_WIDTH-1:0]		d[OPE_WIDTH-1:0][OPE_WIDTH-1:0];
    wire	 [TAG_WIDTH-1:0]tag_in;
 
-   wire [7:0]	p[OPE_WIDTH-1:0][OPE_WIDTH-1:0];
+   wire [8-1:0]	p[OPE_WIDTH-1:0][OPE_WIDTH-1:0];
 
 
-   reg [7:0] pixel_out;
+   reg [8-1:0] pixel_out;
    reg	[TAG_WIDTH-1:0]tag_out;
+   //
+
+
+   //
 
    
    //
@@ -44,10 +55,10 @@ module operation	#(
 
 
 
-
+   //画素値を参照したい場合はp[y][x]を使用してください。
 
    always @(posedge clk) begin
-      if(rst|reflesh) begin
+      if(rst|refresh) begin
 	 pixel_out <= 0;
 	 tag_out <= 0;
       end
@@ -63,13 +74,13 @@ module operation	#(
 
 
 	 if(tag_in==DATA_TAG0) begin
-	 	 pixel_out	<=	p[OPE_WIDTH/2][OPE_WIDTH/2];
-		 tag_out	<=		tag_in;
+	    pixel_out	<=	p[OPE_WIDTH/2][OPE_WIDTH/2];
+	    tag_out	<=		tag_in;
 	 end
-
 	 else begin
-		pixel_out	<=	8'hff;
-		tag_out	<=		tag_in;
+	    pixel_out	<=	p[OPE_WIDTH/2][OPE_WIDTH/2];
+	    //pixel_out	<=	8'hff;
+	    tag_out	<=		tag_in;
 	 end
 
 	 

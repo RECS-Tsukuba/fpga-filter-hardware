@@ -47,10 +47,11 @@ module filter #(
 		   input user_flag,
 		   input [9: 0] pos_x,
 		   input [9: 0] pos_y,
-		   input reflesh,
+		   input refresh,
 		   input reset,
 		   input clock
 		   );
+
    //! Constants
    parameter INVALID_TAG = 2'd0;
    parameter DATA_TAG0 = 2'd1;
@@ -123,80 +124,80 @@ module filter #(
 
 
       start <=
-	      (reset|reflesh)? 1'b1: (
+	      (reset|refresh)? 1'b1: (
 				      (is_tag_in==DATA_TAG0||is_tag_in==DATA_TAG1)? 1'b0 : (
 											    start));
       system_count <=
-	     (reset|reflesh)? 32'h0: (
+	     (reset|refresh)? 32'h0: (
 				      (system_count == (image_size<<2))? (image_size<<2): system_count + 32'h1);
 
 
       tag_in <=
-	       (reset|reflesh)? INVALID_TAG:is_tag_in;
+	       (reset|refresh)? INVALID_TAG:is_tag_in;
 
       tag_out <=
-		(reset|reflesh)? INVALID_TAG:is_tag_out;
+		(reset|refresh)? INVALID_TAG:is_tag_out;
 
       
       request0 <=
 		 (reset)? 1'b0: (
-				 (reflesh)? 1'b1: (
+				 (refresh)? 1'b1: (
 						   (is_end)? 1'b0: (
 								    request0)));
       request1 <=
 		 (reset)? 1'b0: (
-				 (reflesh)? 1'b1: (
+				 (refresh)? 1'b1: (
 						   (is_end)? 1'b0: (
 								    request1)));
       command_entry0 <=  
-			 (reset | reflesh)? 0: (
+			 (reset | refresh)? 0: (
 						ready0);
       
       command_entry1 <=  
-			 (reset | reflesh| is_end)? 0: (
+			 (reset | refresh| is_end)? 0: (
 							(ready1&(count1==2'b10)&(start==1'b0))? 1 : (
 												     0));
       
       write_enable1 <=
-		      (reset | reflesh | is_end)? 0: (
+		      (reset | refresh | is_end)? 0: (
 						      ready1);
 
 
       ptr0 <=
-	     (reset|reflesh)? 32'h0: (
+	     (reset|refresh)? 32'h0: (
 				      (ptr0 == image_size)? image_size: (
 									 (ready0)? ptr0 + 1: (
 											      ptr0)));
       width_count <=
-		    (reset|reflesh)? 10'b0 : (
+		    (reset|refresh)? 10'b0 : (
 					      (width_count==(image_width-10'h1))? 10'b0 :(
 											  (ready0)? width_count+10'b01:width_count));
 
       ptr1 <=
-	     (reset|reflesh|start)? 32'h0: (
+	     (reset|refresh|start)? 32'h0: (
 					    ((ptr1 == image_size))? image_size: (
 										 (ready1 && (tag_out==DATA_TAG0||tag_out==DATA_TAG1))? ptr1 + 1: (
 																		  ptr1)));
 
 
       tag0 <=
-	     (reset | reflesh| is_end | (!ready0) )? INVALID_TAG: (
+	     (reset | refresh| is_end | (!ready0) )? INVALID_TAG: (
 								   (ptr0 == image_size)? DATA_END_TAG:(
 												       (width_count==(image_width-10'h1))? DATA_TAG1: DATA_TAG0));
 
       count0 <=
-	       (reset|reflesh)? 2'b00 : (
+	       (reset|refresh)? 2'b00 : (
 					 (ready0 &(tag_in==DATA_TAG0||tag_in==DATA_TAG1)&(start==1'b0))? count0+2'b01: (
 															count0));
 
       count1 <=
-	       (reset|reflesh)? 2'b00 : (
+	       (reset|refresh)? 2'b00 : (
 					 (ready1 & (tag_out==DATA_TAG0||tag_out==DATA_TAG1))? count1+2'b01: (
 													     count1));
       
       word_in <= 
 		 (is_end)? 32'h0:(
-				  (reset|reflesh|start)? query0 : (
+				  (reset|refresh|start)? query0 : (
 								   (count0==2'b11)? query0:(word_in >>	8)));
       
       
@@ -207,7 +208,7 @@ module filter #(
       data_out1[31:24]<=pixel_out;
 
       is_end <=
-	       (reset|reflesh)? 0: (
+	       (reset|refresh)? 0: (
 				    (ptr1 == (image_size) || system_count == (image_size<<2) )? 1: (
 													   is_end));
 
@@ -227,7 +228,7 @@ module filter #(
     			   .image_width(image_width),
     			   .clk(clock),
     			   .rst(reset),
-    			   .reflesh(reflesh),
+    			   .refresh(refresh),
     			   .data_out(data_out)
     			   );
 

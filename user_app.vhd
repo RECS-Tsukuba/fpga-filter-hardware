@@ -49,7 +49,7 @@ architecture mixed of user_app is
     signal user_wr : user_wr_vector_t;
 
     signal user_enable : std_logic;
-    signal reflesh : std_logic;
+    signal refresh : std_logic;
     signal image_size : std_logic_vector(rd_width(0)- 1 downto 0);
     signal image_width : std_logic_vector(9  downto 0);
 
@@ -105,7 +105,7 @@ architecture mixed of user_app is
 				
 				
 
-            reflesh : in std_logic;
+            refresh : in std_logic;
             reset : in std_logic;
             clock : in std_logic);
     end component;
@@ -120,12 +120,12 @@ begin
         reg_out(32 * i + 31 downto 32 * i) <= user_out(i);
     end generate;
 
-    set_reflesh: process(rst, clk) begin
+    set_refresh: process(rst, clk) begin
         if rst = '1' then
-            reflesh <= '0';
+            refresh <= '0';
         elsif clk'event and clk = '1' then
             if user_wr(0)(0) = '1' then
-                reflesh <= reg_in(0);
+                refresh <= reg_in(0);
             end if;
         end if;
     end process;
@@ -204,7 +204,7 @@ begin
 
 
 
-    user_out(0)(0) <= reflesh;
+    user_out(0)(0) <= refresh;
     user_out(0)(31 downto 1) <= (others => '0');
     user_out(1)(0) <= user_enable;
     user_out(1)(31 downto 1) <= (others => '0');
@@ -234,9 +234,9 @@ begin
 
 
     -- Unused regisers return undefined
-    user_out(7 to 31) <= (others => (others => '-'));
---    user_out(33 to 61) <= (others => (others => '-'));
-    user_out(33 to 59) <= (others => (others => '-'));
+    user_out(7 to 31) <= (others => (others => '0'));
+    -- user_out(33 to 61) <= (others => (others => '-'));
+    user_out(33 to 59) <= (others => (others => '0'));
 
     w(0) <= '0';
     tag(1) <= (others => '0');
@@ -280,7 +280,7 @@ begin
             user_flag => user_flag,
             pos_x => pos_x,
             pos_y => pos_y,
-            reflesh => reflesh,
+            refresh => refresh,
 
             reset => rst,
             clock => clk);
