@@ -18,6 +18,9 @@
 // Additional Comments: 
 //
 //////////////////////////////////////////////////////////////////////////////////
+
+//sram0から32bのデータを読み込んできて，8bに分けてfilter_unitに与え
+//結果の8bを32bに集めて，sram1に書き込む
 module filter #(
 		parameter ADDRESS_WIDTH = 32,
 		parameter SRAMDATA_WIDTH = 32,
@@ -31,6 +34,8 @@ module filter #(
 		   output reg [SRAMDATA_WIDTH - 1: 0] data_out1,
 		   output reg is_end,
 
+
+		   //debug用レジスタuser_reg(60~63)に対応
 		   output reg [31:0]debug_signal0,
 		   output reg [31:0]debug_signal1,
 		   output reg [31:0]debug_signal2,
@@ -223,13 +228,13 @@ module filter #(
     		 .DATA_END_TAG(DATA_END_TAG),
     		 .OPE_WIDTH(3)
 
-    		 )fil_uni (
-    			   .data_in(data_in),
-    			   .image_width(image_width),
-    			   .clk(clock),
-    			   .rst(reset),
-    			   .refresh(refresh),
-    			   .data_out(data_out)
-    			   );
+    		 )fil_uni(
+			  .data_in(data_in),
+			  .image_width(image_width),
+			  .clk(clock),
+			  .rst(reset),
+			  .refresh(refresh),
+			  .data_out(data_out)
+			  );
 
 endmodule

@@ -1,18 +1,30 @@
 `timescale 1ns / 1ps
 module filter_unit	#(
+			  //各画素に付加されるtagのビット幅
 			  parameter TAG_WIDTH = 2,
+			  //tag値：無効値
 			  parameter INVALID_TAG = 2'd0,
+			  //tag値：有効値
 			  parameter DATA_TAG0 = 2'd1,
+			  //tag値：有効値（行末）
 			  parameter DATA_TAG1 = 2'd2,
+			  //tag値：無効値（終了）
 			  parameter DATA_END_TAG = 2'd3,
+			  //Operation Window幅（正方形）
 			  parameter OPE_WIDTH = 3,
+			  //各画素値のbit幅（tag（2b）+画素値（8b））
 			  parameter DATA_WIDTH = 8 + TAG_WIDTH
 			  )(
+			    //入力画素10b（tag[2b]+pixel[8b]）
 			    input [DATA_WIDTH-1:0]	data_in,
+			    //画像幅
 			    input	[9:0]	image_width,
 			    input	clk,
+			    //rst信号は動作開始時にon
 			    input rst,
+			    //refresh信号は各フレームの開始時にon
 			    input refresh,
+			    //出力画素10b（tag[2b]+pixel[8b]）
 			    output [DATA_WIDTH-1:0]	data_out
 			    );
    //for文用の変数宣言
@@ -29,6 +41,7 @@ module filter_unit	#(
 
    //line_buffer用wire
    wire	 [DATA_WIDTH-1:0] buf_out[OPE_WIDTH-1:0];
+
    //下位モジュール接続用bus
    //OPE_SIZE^2のdata(10b)
    wire [DATA_WIDTH*OPE_WIDTH*OPE_WIDTH-1:0]data_bus;
@@ -82,10 +95,7 @@ module filter_unit	#(
 	 ///////////////////////////////////////////////////////////
 
 
-	 
-	 /********************************************************
-	  ** Control_2 : BlockRAMのアドレス生成回路（触らない）		**
-	  ********************************************************/
+	 //Control : BlockRAMのアドレス生成回路（触らない）
 
 	 waddr <= raddr;
 	 if(raddr == image_width-9'h1)	// 1行分のアドレス
@@ -108,19 +118,19 @@ module filter_unit	#(
    	       .DATA_END_TAG(DATA_END_TAG),
 	       .OPE_WIDTH(OPE_WIDTH)
 	       )ope(
-		    .data_bus(data_bus),
-		    .clk (clk),
-		    .rst (rst),
-		    .refresh(refresh),
-		    .out (data_out)
-		    );
+      .data_bus(data_bus),
+      .clk (clk),
+      .rst (rst),
+      .refresh(refresh),
+      .out (data_out)
+      );
 
 
    /////////////////////////////////////////////////////////
    // BlockRAMs (depth=ImageWidth width=8bit)	の呼び出し
    /////////////////////////////////////////////////////////
 
-
+   //OPE_WIDTHに応じてline_bufferの生成
    generate
       for(y = 0; y < OPE_WIDTH-1; y = y + 1) begin: Gen_linebuffer
     	 blockram_10b1024 line_buffer_y (
